@@ -1,0 +1,165 @@
+{
+  "test": {
+    "accuracy": 0.9338310145911096,
+    "precision_macro": 0.9348343012351176,
+    "recall_macro": 0.9357497512458899,
+    "f1_macro": 0.9352648736333488,
+    "precision_per_class": [
+      0.9821428571428571,
+      0.9829787234042553,
+      0.9787735849056604,
+      0.8183673469387756,
+      0.8467432950191571,
+      1.0
+    ],
+    "recall_per_class": [
+      0.9979838709677419,
+      0.9808917197452229,
+      0.9880952380952381,
+      0.8167006109979633,
+      0.8308270676691729,
+      1.0
+    ],
+    "f1_per_class": [
+      0.99,
+      0.9819341126461212,
+      0.9834123222748815,
+      0.817533129459735,
+      0.8387096774193549,
+      1.0
+    ],
+    "confusion_matrix": [
+      [
+        495,
+        0,
+        1,
+        0,
+        0,
+        0
+      ],
+      [
+        6,
+        462,
+        3,
+        0,
+        0,
+        0
+      ],
+      [
+        3,
+        2,
+        415,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        5,
+        5,
+        401,
+        80,
+        0
+      ],
+      [
+        0,
+        1,
+        0,
+        89,
+        442,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        537
+      ]
+    ],
+    "classification_report": "                    precision    recall  f1-score   support\n\n           WALKING       0.98      1.00      0.99       496\n  WALKING_UPSTAIRS       0.98      0.98      0.98       471\nWALKING_DOWNSTAIRS       0.98      0.99      0.98       420\n           SITTING       0.82      0.82      0.82       491\n          STANDING       0.85      0.83      0.84       532\n            LAYING       1.00      1.00      1.00       537\n\n          accuracy                           0.93      2947\n         macro avg       0.93      0.94      0.94      2947\n      weighted avg       0.93      0.93      0.93      2947\n"
+  },
+  "val_referencia": {
+    "accuracy": 1.0,
+    "precision_macro": 1.0,
+    "recall_macro": 1.0,
+    "f1_macro": 1.0,
+    "precision_per_class": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "recall_per_class": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "f1_per_class": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "confusion_matrix": [
+      [
+        338,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        276,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        242,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        293,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        321,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        331
+      ]
+    ],
+    "classification_report": "                    precision    recall  f1-score   support\n\n           WALKING       1.00      1.00      1.00       338\n  WALKING_UPSTAIRS       1.00      1.00      1.00       276\nWALKING_DOWNSTAIRS       1.00      1.00      1.00       242\n           SITTING       1.00      1.00      1.00       293\n          STANDING       1.00      1.00      1.00       321\n            LAYING       1.00      1.00      1.00       331\n\n          accuracy                           1.00      1801\n         macro avg       1.00      1.00      1.00      1801\n      weighted avg       1.00      1.00      1.00      1801\n"
+  },
+  "_nota_val": "val_referencia: sujetos usados en entrenamiento final (train+val). M\u00e9trica principal: test."
+}

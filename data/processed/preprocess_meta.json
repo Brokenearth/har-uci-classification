@@ -1,0 +1,21 @@
+{
+  "shapes": {
+    "X_train": [
+      5551,
+      128,
+      9
+    ],
+    "X_val": [
+      1801,
+      128,
+      9
+    ],
+    "X_test": [
+      2947,
+      128,
+      9
+    ]
+  },
+  "n_train_subjects": 16,
+  "n_val_subjects": 5
+}

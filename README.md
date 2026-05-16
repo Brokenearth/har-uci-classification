@@ -1,0 +1,97 @@
+# Clasificación de Actividades Humanas (UCI HAR)
+
+Sistema reproducible en Python para clasificar seis actividades humanas a partir de nueve señales inerciales del [UCI HAR Dataset](https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones). Compara **LSTM** vs **Conv1D+LSTM** con validación cruzada por sujeto, registro en Weights & Biases e interfaz web para inferencia.
+
+## Estructura
+
+```
+ProyectoF13CI/
+├── data/                     # raw/ + processed/ (.npz, stats.json)
+├── src/har_classifier/       # Paquete con toda la lógica
+│   ├── loader.py             # Lectura UCI (archivos .txt)
+│   ├── torch_dataset.py      # HARDataset (PyTorch)
+│   ├── models/, training/, evaluation/, utils/
+├── scripts/                  # Pipeline 01–06 (orquestación)
+├── app/                      # flask_app.py, streamlit_app.py
+├── results/                  # Salidas del pipeline
+└── evidencias/               # Copia para entrega
+```
+
+Los `scripts/0X_*.py` llaman módulos en `src/har_classifier/` (p. ej. `training/final_train.py`). No es código duplicado: scripts = entrada; paquete = librería. La carpeta `outputs/` es legado; usar solo `results/`.
+
+## Requisitos
+
+- Python 3.10+
+- (Opcional) GPU NVIDIA con PyTorch CUDA
+
+```powershell
+py -3 -m venv .venv
+.venv\Scripts\pip.exe install -r requirements.txt
+```
+
+Si PowerShell bloquea `activate`, usa `.venv\Scripts\python.exe` directamente.
+
+## Pipeline completo
+
+```powershell
+$env:WANDB_MODE = "offline"   # o: wandb login
+
+.venv\Scripts\python.exe scripts/01_download_data.py
+.venv\Scripts\python.exe scripts/02_preprocess.py
+.venv\Scripts\python.exe scripts/03_cross_validation.py --epochs 30 --no-wandb
+.venv\Scripts\python.exe scripts/04_final_training.py --epochs 40 --no-wandb
+.venv\Scripts\python.exe scripts/05_evaluate.py
+.venv\Scripts\python.exe scripts/06_visualize_errors.py
+.venv\Scripts\python.exe scripts/test_models.py
+```
+
+## Interfaz web
+
+**Flask (recomendado en Windows)** — señales 9 canales, etiquetas y probabilidades:
+
+```powershell
+.venv\Scripts\python.exe app/flask_app.py
+```
+
+O `scripts\run_flask.bat` → http://127.0.0.1:5000
+
+**Streamlit** — http://localhost:8501
+
+```powershell
+.venv\Scripts\python.exe scripts/run_streamlit.py
+```
+
+## Carpeta de evidencias (`evidencias/`)
+
+Copia lista para entregar o revisar sin reentrenar: `metrics_final.json`, `comparacion_modelos.csv`, `confusion_matrix.png`, `loss_curves.png`, `final_model.pt`. Ver `evidencias/LEEME.md` para ejecutar la app con ese modelo.
+
+Actualizar tras un nuevo pipeline:
+
+```powershell
+.venv\Scripts\python.exe scripts\sync_evidencias.py
+```
+
+## Evidencias del plan (`results/`)
+
+| Artefacto | Descripción |
+|-----------|-------------|
+| `data/processed/har_processed.npz` | Train / val / test normalizados |
+| `results/metrics/comparacion_modelos.csv` | CV 2-fold LSTM vs Conv1D+LSTM |
+| `results/models/best_model.pt` | Mejor fold CV (`ensure_best_model.py` o tras 03) |
+| `results/models/final_model.pt` | Modelo final (train+val UCI) |
+| `results/metrics/metrics_final.json` | Métricas test (+ val referencia) |
+| `results/metrics/training_history.json` | Historial entrenamiento final |
+| `results/figures/loss_curves.png` | Curvas pérdida / accuracy |
+| `results/figures/confusion_matrix.png` | Matriz de confusión (test) |
+| `results/figures/aciertos_*.png` | 5 aciertos |
+| `results/figures/errores_*.png` | 5 errores |
+| `results/reports/error_analysis.md` | Análisis de confusiones |
+
+**Métrica principal:** accuracy en **test** (> 0.88 esperado). `val_referencia` en 05 es optimista tras entrenar con train+val.
+
+## Modelos
+
+- **LSTMClassifier**: `(B, T, C)`, LSTM 2×128, dropout 0.3.
+- **Conv1DLSTMClassifier**: Conv1d→BN→ReLU→MaxPool (32→64), LSTM, clasificación.
+
+Validación: `StratifiedGroupKFold` por sujeto sin fuga entre train y val.

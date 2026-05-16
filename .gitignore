@@ -1,0 +1,19 @@
+.cursor/
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+data/raw/
+data/processed/*.npz
+wandb/
+.DS_Store
+# Salidas regenerables del pipeline (copia de entrega en evidencias/)
+results/models/*.pt
+results/figures/*.png
+results/metrics/*.csv
+results/metrics/*.json
+results/reports/*.md
+results/*.log
+outputs/
+wandb/
