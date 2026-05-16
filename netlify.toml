@@ -1,0 +1,9 @@
+[build]
+  publish = "site"
+  # Los datos se generan en local (PyTorch) y se commitean en site/data/
+  command = "echo \"Usando site/ pregenerado; ejecute scripts/build_netlify_site.py si actualiza el modelo.\""
+
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"

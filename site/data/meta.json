@@ -1,0 +1,26 @@
+{
+  "activity_names": [
+    "WALKING",
+    "WALKING_UPSTAIRS",
+    "WALKING_DOWNSTAIRS",
+    "SITTING",
+    "STANDING",
+    "LAYING"
+  ],
+  "channels": [
+    "body_acc_x",
+    "body_acc_y",
+    "body_acc_z",
+    "body_gyro_x",
+    "body_gyro_y",
+    "body_gyro_z",
+    "total_acc_x",
+    "total_acc_y",
+    "total_acc_z"
+  ],
+  "n_samples": 2947,
+  "metrics": {
+    "test_accuracy": 0.9338,
+    "note": "Inferencia precomputada; mismo modelo que evidencias/final_model.pt"
+  }
+}

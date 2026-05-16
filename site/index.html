@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>HAR Classifier — UCI HAR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/styles.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <p class="eyebrow">UCI HAR · Conv1D+LSTM</p>
+      <h1>Clasificación de actividades humanas</h1>
+      <p class="subtitle">Demo estática en Netlify · mismas predicciones que la app Flask local</p>
+      <div class="hero-links">
+        <a href="https://github.com/Brokenearth/har-uci-classification" target="_blank" rel="noopener">Ver código en GitHub</a>
+      </div>
+    </header>
+
+    <div id="loading" class="loading card">Cargando muestras de test…</div>
+
+    <main id="app" class="hidden">
+      <section class="card controls">
+        <h2>Explorar muestra de test</h2>
+        <div class="control-row">
+          <label class="field grow">
+            <span>Índice <strong id="idx-label">0</strong> / <span id="max-idx">0</span></span>
+            <input type="range" id="idx-range" min="0" value="0"/>
+          </label>
+          <label class="field">
+            <span>Índice exacto</span>
+            <input type="number" id="idx-num" min="0" value="0"/>
+          </label>
+        </div>
+      </section>
+
+      <div class="grid">
+        <section class="card">
+          <h2>Predicción</h2>
+          <div id="banner" class="banner"></div>
+          <div class="labels">
+            <div class="label-box">
+              <span class="tag">Etiqueta real</span>
+              <span id="true-label" class="act"></span>
+            </div>
+            <div id="pred-box" class="label-box">
+              <span class="tag">Predicha</span>
+              <span id="pred-label" class="act"></span>
+            </div>
+          </div>
+          <h2 class="mt">Probabilidades</h2>
+          <ul id="probs" class="probs"></ul>
+        </section>
+
+        <section class="card chart-panel">
+          <h2>Señales inerciales (9 canales)</h2>
+          <div class="charts-grid" id="charts"></div>
+        </section>
+      </div>
+
+      <section class="card metrics-row">
+        <h2>Evidencias del proyecto</h2>
+        <div class="figures">
+          <figure>
+            <img src="/assets/confusion_matrix.png" alt="Matriz de confusión"/>
+            <figcaption>Matriz de confusión (test)</figcaption>
+          </figure>
+          <figure>
+            <img src="/assets/loss_curves.png" alt="Curvas de pérdida"/>
+            <figcaption>Curvas de entrenamiento</figcaption>
+          </figure>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>

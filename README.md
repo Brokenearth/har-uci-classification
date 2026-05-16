@@ -13,6 +13,8 @@ ProyectoF13CI/
 │   ├── models/, training/, evaluation/, utils/
 ├── scripts/                  # Pipeline 01–06 (orquestación)
 ├── app/                      # flask_app.py, streamlit_app.py
+├── site/                     # Demo estática para Netlify
+├── netlify.toml              # publish = site
 ├── results/                  # Salidas del pipeline
 └── evidencias/               # Copia para entrega
 ```
@@ -60,6 +62,25 @@ O `scripts\run_flask.bat` → http://127.0.0.1:5000
 ```powershell
 .venv\Scripts\python.exe scripts/run_streamlit.py
 ```
+
+## Demo en Netlify (estático)
+
+Netlify no ejecuta Flask ni PyTorch. La carpeta `site/` es una demo con **predicciones precomputadas** del conjunto de test (misma UI: probabilidades + 9 canales + figuras de evidencias).
+
+Regenerar tras cambiar el modelo o los datos:
+
+```powershell
+.venv\Scripts\python.exe scripts/build_netlify_site.py
+```
+
+**Desplegar** (repositorio `Brokenearth/har-uci-classification`):
+
+1. Sube a GitHub el repo con `site/data/samples.json.gz`, `netlify.toml` y el resto de `site/`.
+2. En [Netlify](https://app.netlify.com/) → **Add new site** → **Import an existing project** → elige el repo de GitHub.
+3. Netlify detecta `netlify.toml` (`publish = "site"`). Pulsa **Deploy site**.
+4. La URL será algo como `https://<nombre>.netlify.app`.
+
+Alternativa sin Git: arrastra la carpeta `site/` en **Netlify Drop** (https://app.netlify.com/drop).
 
 ## Carpeta de evidencias (`evidencias/`)
 

@@ -1,0 +1,180 @@
+:root {
+  --bg: #f4f7fb;
+  --surface: #ffffff;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --muted: #64748b;
+  --accent: #2563eb;
+  --ok: #059669;
+  --ok-bg: #ecfdf5;
+  --ok-border: #6ee7b7;
+  --bad: #dc2626;
+  --bad-bg: #fef2f2;
+  --bad-border: #fca5a5;
+  --shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: "DM Sans", system-ui, sans-serif;
+  background: linear-gradient(180deg, #fff 0%, var(--bg) 220px);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.page { max-width: 1200px; margin: 0 auto; padding: 2rem 1.25rem 3rem; }
+
+.hero { margin-bottom: 1.5rem; }
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  margin-bottom: 0.35rem;
+}
+.hero h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; }
+.subtitle { color: var(--muted); margin-top: 0.35rem; }
+.hero-links { margin-top: 1rem; }
+.hero-links a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+.hero-links a:hover { text-decoration: underline; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.4rem;
+  box-shadow: var(--shadow);
+  margin-bottom: 1.25rem;
+}
+.card h2 {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+.card h2.mt { margin-top: 1.25rem; }
+
+.loading { text-align: center; color: var(--muted); padding: 2rem; }
+.hidden { display: none !important; }
+
+.control-row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
+.field { display: flex; flex-direction: column; gap: 0.35rem; }
+.field.grow { flex: 1; min-width: 240px; }
+.field span { font-size: 0.82rem; color: var(--muted); }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+input[type="number"] {
+  width: 100px;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(400px, 1.6fr);
+  gap: 1.25rem;
+}
+@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+.banner {
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px solid;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+.banner.ok { background: var(--ok-bg); border-color: var(--ok-border); color: var(--ok); }
+.banner.bad { background: var(--bad-bg); border-color: var(--bad-border); color: var(--bad); }
+
+.labels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+.label-box {
+  padding: 0.85rem;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+}
+.label-box .tag {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.3rem;
+}
+.label-box .act { font-weight: 600; font-size: 0.9rem; }
+.label-box.ok { background: var(--ok-bg); border-color: var(--ok-border); }
+.label-box.ok .act { color: var(--ok); }
+.label-box.bad { background: var(--bad-bg); border-color: var(--bad-border); }
+.label-box.bad .act { color: var(--bad); }
+
+.probs { list-style: none; }
+.probs li { margin-bottom: 0.65rem; }
+.prob-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  margin-bottom: 0.3rem;
+}
+.prob-row.top { font-weight: 600; }
+.bar {
+  height: 10px;
+  background: #f1f5f9;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.bar > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #93c5fd, var(--accent));
+  border-radius: 4px;
+}
+.probs li.top .bar > span {
+  background: linear-gradient(90deg, #34d399, var(--ok));
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.65rem;
+}
+.chart-cell {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.35rem;
+  min-height: 120px;
+}
+.chart-cell canvas { width: 100% !important; height: 100px !important; }
+
+.figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+.figures img {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.figures figcaption {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 0.4rem;
+  text-align: center;
+}
