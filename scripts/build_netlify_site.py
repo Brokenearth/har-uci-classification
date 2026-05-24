@@ -21,6 +21,37 @@ from har_classifier.utils.device import get_device
 SITE = ROOT / "site"
 EVIDENCIAS = ROOT / "evidencias"
 
+METRICS_CANDIDATES = (
+    EVIDENCIAS / "metrics_final.json",
+    ROOT / "results" / "metrics" / "metrics_final.json",
+)
+
+
+def load_metrics_accuracies() -> tuple[float, float]:
+    """Carga exactitud en val y test desde metrics_final.json."""
+    metrics_path = next((p for p in METRICS_CANDIDATES if p.exists()), None)
+    if metrics_path is None:
+        searched = ", ".join(str(p) for p in METRICS_CANDIDATES)
+        raise FileNotFoundError(
+            f"No se encontró metrics_final.json. Rutas probadas: {searched}. "
+            "Ejecute scripts/05_evaluate.py y scripts/sync_evidencias.py."
+        )
+
+    with open(metrics_path, encoding="utf-8") as f:
+        metrics_file = json.load(f)
+
+    accuracies: dict[str, float] = {}
+    for split in ("val", "test"):
+        block = metrics_file.get(split)
+        if not isinstance(block, dict) or "accuracy" not in block:
+            raise KeyError(
+                f"{metrics_path}: falta la clave '{split}.accuracy'. "
+                "Regenere métricas con 05_evaluate.py."
+            )
+        accuracies[split] = float(block["accuracy"])
+
+    return accuracies["val"], accuracies["test"]
+
 
 def main() -> None:
     import torch
@@ -63,13 +94,7 @@ def main() -> None:
     assets = SITE / "assets"
     assets.mkdir(exist_ok=True)
 
-    metrics_path = EVIDENCIAS / "metrics_final.json"
-    if not metrics_path.exists():
-        metrics_path = ROOT / "results" / "metrics" / "metrics_final.json"
-    with open(metrics_path, encoding="utf-8") as f:
-        metrics_file = json.load(f)
-    val_acc = float(metrics_file["val"]["accuracy"])
-    test_acc = float(metrics_file["test"]["accuracy"])
+    val_acc, test_acc = load_metrics_accuracies()
 
     meta = {
         "activity_names": ACTIVITY_NAMES,
