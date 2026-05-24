@@ -1,0 +1,418 @@
+\documentclass[aspectratio=169]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+% Quitar iconos de navegación (triángulos, miniaturas, etc.) en todas las diapositivas
+\setbeamertemplate{navigation symbols}{}
+
+% Pie de página: nombre del curso (no los integrantes)
+\setbeamertemplate{footline}{%
+  \leavevmode%
+  \hbox{%
+    \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+      Computación Inteligente%
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+      \usebeamerfont{title in head/foot}\insertshorttitle%
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
+      \usebeamerfont{date in head/foot}\insertshortdate\hspace*{2em}%
+      \insertframenumber{} / \inserttotalframenumber\hspace*{2ex}%
+    \end{beamercolorbox}%
+  }%
+  \vskip0pt%
+}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[spanish]{babel}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% Evita avisos de fuente sans bold (T1/cmss/b/n) en Overleaf
+\usefonttheme{professionalfonts}
+\renewcommand{\familydefault}{\sfdefault}
+
+% Coloque las imágenes en evidencias/figures/ (ver comentarios al final del archivo)
+\graphicspath{{figures/}}
+
+% --- Editar antes de entregar ---
+\title[HAR UCI]{Clasificación de Actividades Humanas con Redes Recurrentes}
+\subtitle{Comparación LSTM vs.\ Conv1D+LSTM — Dataset UCI HAR}
+\author{%
+  Nombre Apellido 1 \and
+  Nombre Apellido 2 \and
+  Nombre Apellido 3%
+}
+\institute{%
+  Computación Inteligente\\
+  Nombre de la institución%
+}
+\date{Mayo 2026}
+
+\newcommand{\imgplaceholder}[2]{%
+  \fbox{\parbox[c][#1][c]{0.92\linewidth}{\centering\small #2}}%
+}
+
+\newcommand{\includefig}[3][0.85]{%
+  \IfFileExists{figures/#2}{%
+    \includegraphics[width=#1\linewidth]{#2}%
+  }{%
+    \imgplaceholder{3.2cm}{Falta: \texttt{figures/#2}\\#3}%
+  }%
+}
+
+% Figura acotada en altura (evita Overfull \vbox en diapositivas llenas)
+\newcommand{\includefigH}[3][0.42\textheight]{%
+  \IfFileExists{figures/#2}{%
+    \includegraphics[height=#1,keepaspectratio]{#2}%
+  }{%
+    \imgplaceholder{2.4cm}{Falta: \texttt{figures/#2}\\#3}%
+  }%
+}
+
+\begin{document}
+
+%==============================================================================
+\begin{frame}
+  \titlepage
+\end{frame}
+
+%==============================================================================
+\section{Contexto}
+
+\begin{frame}{Motivación}
+  \begin{itemize}
+    \item Los \textbf{smartphones} integran acelerómetro y giroscopio capaces de registrar el movimiento corporal.
+    \item Las señales inerciales permiten reconocer \textbf{actividades humanas} (caminar, sentarse, acostarse, etc.) de forma automática.
+    \item Aplicaciones en \textbf{salud}, rehabilitación, deporte, asistencia al adulto mayor y sistemas de monitoreo continuo.
+    \item El \textbf{aprendizaje profundo} modela dependencias temporales sin diseñar a mano características para cada actividad.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Problema}
+  \begin{block}{Pregunta de investigación}
+    \centering
+    ¿Cómo clasificar automáticamente una de seis actividades humanas\\
+    a partir de ventanas de señales inerciales de un smartphone?
+  \end{block}
+  \vspace{0.25cm}
+  \begin{itemize}
+    \item \textbf{Entrada:} ventana de $128$ pasos $\times$ $9$ canales (aceleración y giroscopio).
+    \item \textbf{Salida:} etiqueta entre seis actividades del protocolo UCI HAR.
+    \item \textbf{Dificultad:} actividades estáticas (\textit{Sitting} vs.\ \textit{Standing}) producen patrones muy similares.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Justificación}
+  \begin{itemize}
+    \item El etiquetado manual de actividades \textbf{no escala} en aplicaciones reales.
+    \item Las series temporales multisensoriales requieren modelos que capturen \textbf{evolución en el tiempo}.
+    \item Una \textbf{LSTM} modela memoria a largo plazo sobre la secuencia completa.
+    \item \textbf{Conv1D+LSTM} extrae primero patrones locales (convolución) y luego su dinámica temporal (LSTM).
+    \item Comparar ambas arquitecturas sobre el mismo pipeline aporta evidencia para elegir el modelo final.
+  \end{itemize}
+\end{frame}
+
+%==============================================================================
+\section{Objetivos}
+
+\begin{frame}{Objetivos}
+  \begin{block}{Objetivo general}
+    Desarrollar un sistema reproducible de clasificación de actividades humanas sobre el dataset UCI HAR, comparando arquitecturas recurrentes y evaluando el modelo final en validación (literal c).
+  \end{block}
+  \begin{enumerate}
+    \item Preprocesar y normalizar las nueve señales inerciales.
+    \item Implementar y comparar \textbf{LSTM} y \textbf{Conv1D+LSTM} con validación cruzada por sujeto ($2$ folds).
+    \item Seleccionar la mejor arquitectura y entrenar el \textbf{modelo final}.
+    \item Medir exactitud, precisión, exhaustividad, F1 y matriz de confusión en \textbf{validación} (literal c).
+    \item Presentar ejemplos cualitativos en \textbf{test} (literal d) e interfaz web (literal f).
+  \end{enumerate}
+\end{frame}
+
+%==============================================================================
+\section{Metodología}
+
+\begin{frame}{Metodología — Pipeline del proyecto}
+  \begin{enumerate}
+    \item \textbf{Datos:} descarga UCI HAR; lectura de archivos oficiales; tensores $(N, 128, 9)$.
+    \item \textbf{Preprocesamiento:} normalización $z$-score por canal (estadísticas solo de entrenamiento).
+    \item \textbf{Validación:} \texttt{StratifiedGroupKFold} ($2$ folds) agrupando por \textbf{sujeto} (sin fuga entre folds).
+    \item \textbf{Comparación:} entrenamiento LSTM vs.\ Conv1D+LSTM ($\approx 30$ épocas, early stopping).
+    \item \textbf{Modelo final:} Conv1D+LSTM entrenado solo con \textbf{train}; evaluación cuantitativa en \textbf{val} ($1801$ muestras).
+    \item \textbf{Trazabilidad:} registro con Weights \& Biases; artefactos en \texttt{results/} y \texttt{evidencias/}.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Dataset y señales utilizadas}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \textbf{UCI HAR Dataset}
+      \begin{itemize}
+        \item $30$ sujetos; smartphone en la cintura.
+        \item Ventana: $128$ muestras ($2.56$ s a $50$ Hz).
+        \item Train original: $7352$; test oficial: $2947$.
+        \item Clases: WALKING, WALKING\_UPSTAIRS, WALKING\_DOWNSTAIRS, SITTING, STANDING, LAYING.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \small
+      \begin{tabular}{@{}ll@{}}
+        \toprule
+        Grupo & Canales \\
+        \midrule
+        Acel.\ corporal & body\_acc\_x,y,z \\
+        Giroscopio & body\_gyro\_x,y,z \\
+        Acel.\ total & total\_acc\_x,y,z \\
+        \bottomrule
+      \end{tabular}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Arquitecturas evaluadas}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{LSTM}
+        \small
+        \begin{itemize}
+          \item LSTM $2 \times 128$, dropout $0.3$.
+          \item Entrada $(B, T, C)$ con $C=9$.
+          \item Clasificador lineal sobre el último estado oculto.
+        \end{itemize}
+      \end{block}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Conv1D+LSTM (seleccionada)}
+        \small
+        \begin{itemize}
+          \item Conv1d ($32 \to 64$), BN, ReLU, MaxPool ($\times 2$).
+          \item LSTM $2 \times 128$, dropout $0.3$.
+          \item Patrones locales + memoria temporal.
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vspace{0.15cm}
+  \centering
+  \includefigH[0.34\textheight]{diagrama_arquitectura.png}{Esquema Conv1D+LSTM}
+\end{frame}
+
+\begin{frame}{Diseño experimental}
+  \begin{itemize}
+    \item \textbf{Comparación:} LSTM vs.\ Conv1D+LSTM bajo el mismo preprocesamiento y semilla ($42$).
+    \item \textbf{CV:} $2$ folds estratificados por \textbf{grupo = sujeto}; métrica de selección: exactitud en validación.
+    \item \textbf{Entrenamiento final:} mejor arquitectura solo con \textbf{train}; métricas oficiales en \textbf{val} (literal c).
+    \item \textbf{Test UCI:} reservado para ejemplos cualitativos e interfaz web (literales d y f).
+    \item \textbf{Hiperparámetros:} batch $64$, lr $10^{-3}$, Adam, early stopping (paciencia $5$).
+  \end{itemize}
+  \vspace{0.2cm}
+  \small
+  \centering
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    Parámetro & Valor \\
+    \midrule
+    Épocas CV / final & $30$ / $40$ \\
+    Hidden LSTM & $128$ \\
+    Kernel Conv1d & $5$ \\
+    \bottomrule
+  \end{tabular}
+\end{frame}
+
+%==============================================================================
+\section{Evaluación y resultados}
+
+\begin{frame}{Medidas de desempeño}
+  \small
+  Por clase (enfoque uno-vs-rest), con \textbf{VP}, \textbf{FP} y \textbf{FN}:
+  \vspace{0.15cm}
+  \begin{align*}
+    \text{Precisión} &= \frac{VP}{VP + FP}
+    & \text{Exhaustividad (Recall)} &= \frac{VP}{VP + FN} \\[0.4em]
+    F_1 &= \frac{2 \cdot \text{Precisión} \cdot \text{Recall}}{\text{Precisión} + \text{Recall}}
+    & \text{Exactitud global} &= \frac{\text{número de aciertos}}{N}
+  \end{align*}
+  \vspace{0.1cm}
+  \begin{itemize}
+    \item \textbf{FP} (falso positivo): se predice la clase, pero la muestra es de otra.
+    \item \textbf{FN} (falso negativo): la muestra es de la clase, pero el modelo predice otra.
+    \item \textbf{VP} (verdadero positivo): predicción correcta para esa clase.
+    \item En \textbf{validación} reportamos promedios \textbf{macro} de precisión, recall y $F_1$ (literal c).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Resultados — Validación cruzada (2 folds)}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.44\textwidth}
+      \begin{table}
+        \centering
+        \begin{tabular}{lc}
+          \toprule
+          Arquitectura & Exactitud \\
+          \midrule
+          LSTM & $90.61 \pm 0.00$\% \\
+          Conv1D+LSTM & $\mathbf{92.45 \pm 0.16}$\% \\
+          \bottomrule
+        \end{tabular}
+      \end{table}
+      \vspace{0.2cm}
+      Conv1D+LSTM supera a LSTM en ambos folds $\Rightarrow$ modelo final.
+    \end{column}
+    \begin{column}{0.54\textwidth}
+      \centering
+      \includefigH[0.48\textheight]{comparacion_cv.png}{Gráfico CV}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Resultados — Modelo final en validación (literal c)}
+  \begin{columns}[T]
+    \begin{column}{0.46\textwidth}
+      \begin{table}
+        \centering
+        \begin{tabular}{lc}
+          \toprule
+          Métrica (val) & Valor \\
+          \midrule
+          Exactitud & \textbf{97.78\%} \\
+          Precisión macro & 97.94\% \\
+          Exhaustividad macro & 97.89\% \\
+          F1 macro & 97.81\% \\
+          \bottomrule
+        \end{tabular}
+      \end{table}
+      \small
+      \begin{itemize}
+        \item $1801$ muestras de val (sujetos no usados en entrenamiento).
+        \item Test ($2947$) reservado para literal d: $\approx 92.6\%$ acc.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.52\textwidth}
+      \footnotesize
+      \begin{tabular}{lccc}
+        \toprule
+        Actividad & P & R & F1 \\
+        \midrule
+        WALKING & 1.00 & 1.00 & 1.00 \\
+        WALKING\_UP & 1.00 & 0.99 & 0.99 \\
+        WALKING\_DOWN & 1.00 & 1.00 & 1.00 \\
+        SITTING & 0.89 & 1.00 & 0.94 \\
+        STANDING & 1.00 & 0.88 & 0.94 \\
+        LAYING & 1.00 & 1.00 & 1.00 \\
+        \bottomrule
+      \end{tabular}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Resultados — Matriz de confusión (validación)}
+  \centering
+  \includefigH[0.62\textheight]{confusion_matrix.png}{Matriz de confusión}
+  \vspace{0.1cm}
+  \small Mayor confusión entre \textbf{SITTING} y \textbf{STANDING} ($37$ errores cruzados en val).
+\end{frame}
+
+\begin{frame}{Resultados — Curvas de entrenamiento}
+  \centering
+  \includefigH[0.68\textheight]{loss_curves.png}{Curvas de pérdida}
+  \vspace{0.1cm}
+  \small Entrenamiento del modelo final (solo \textbf{train}; val para early stopping).
+\end{frame}
+
+\begin{frame}{Análisis cualitativo — Aciertos y errores (test, literal d)}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \centering
+      \textbf{Ejemplo de acierto}\\[0.1cm]
+      \includefigH[0.52\textheight]{aciertos_1.png}{aciertos\_1.png}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \centering
+      \textbf{Error SITTING $\leftrightarrow$ STANDING}\\[0.1cm]
+      \includefigH[0.52\textheight]{errores_1.png}{errores\_1.png}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Interfaz web de demostración}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.38\textwidth}
+      \begin{itemize}
+        \item Muestras de \textbf{test}: etiqueta real, predicción y probabilidades.
+        \item Gráfica de las \textbf{nueve señales} inerciales.
+        \item \textbf{Flask} + PyTorch: inferencia con el modelo final.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.60\textwidth}
+      \centering
+      \includefigH[0.58\textheight]{captura_interfaz.png}{Captura Flask}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+%==============================================================================
+\section{Cierre}
+
+\begin{frame}{Conclusiones}
+  \begin{itemize}
+    \item El pipeline (datos $\rightarrow$ CV $\rightarrow$ modelo final $\rightarrow$ evaluación en val) alcanza \textbf{97.78\%} de exactitud en validación (literal c).
+    \item \textbf{Conv1D+LSTM} supera a LSTM en validación cruzada y se adopta como modelo final.
+    \item Las actividades \textbf{dinámicas} y \textbf{LAYING} se reconocen casi sin error; el reto principal son posturas estáticas.
+    \item La matriz de confusión en val confirma la confusión \textbf{Sitting--Standing}; en test se analizan 5 aciertos y 5 errores (literal d).
+    \item La interfaz web facilita interpretar predicciones para la defensa y la entrega del proyecto.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[allowframebreaks]{Referencias}
+  \large
+  \begin{thebibliography}{99}
+    \bibitem{uci}
+    Anguita, D., Ghio, A., Oneto, L., Parra, X., Reyes-Ortiz, J. L.
+    \newblock A Public Domain Dataset for Human Activity Recognition Using Smartphones.
+    \newblock \textit{ESANN}, 2013.
+    \newblock UCI ML Repository, ID 240.
+
+    \bibitem{lstm}
+    Hochreiter, S., Schmidhuber, J.
+    \newblock Long Short-Term Memory.
+    \newblock \textit{Neural Computation}, 9(8), 1997.
+
+    \bibitem{cnn}
+    LeCun, Y., et al.
+    \newblock Gradient-Based Learning Applied to Document Recognition.
+    \newblock \textit{Proceedings of the IEEE}, 1998.
+
+    \bibitem{pytorch}
+    Paszke, A., et al.
+    \newblock PyTorch: An Imperative Style, High-Performance Deep Learning Library.
+    \newblock \textit{NeurIPS}, 2019.
+
+    \bibitem{sklearn}
+    Pedregosa, F., et al.
+    \newblock Scikit-learn: Machine Learning in Python.
+    \newblock \textit{JMLR}, 12, 2011.
+
+    \bibitem{wandb}
+    Biewald, L.
+    \newblock Experiment Tracking with Weights and Biases, 2020.
+    \newblock Software disponible en wandb.com.
+  \end{thebibliography}
+\end{frame}
+
+\begin{frame}[plain,noframenumbering]{}
+  \centering
+  \vfill
+  {\Huge Gracias}
+  \vfill
+\end{frame}
+
+\end{document}

@@ -99,16 +99,16 @@ Actualizar tras un nuevo pipeline:
 | `data/processed/har_processed.npz` | Train / val / test normalizados |
 | `results/metrics/comparacion_modelos.csv` | CV 2-fold LSTM vs Conv1D+LSTM |
 | `results/models/best_model.pt` | Mejor fold CV (`ensure_best_model.py` o tras 03) |
-| `results/models/final_model.pt` | Modelo final (train+val UCI) |
-| `results/metrics/metrics_final.json` | Métricas test (+ val referencia) |
+| `results/models/final_model.pt` | Modelo final (entrenado solo con train) |
+| `results/metrics/metrics_final.json` | Métricas **val** (literal c) + test (literal d) |
 | `results/metrics/training_history.json` | Historial entrenamiento final |
 | `results/figures/loss_curves.png` | Curvas pérdida / accuracy |
-| `results/figures/confusion_matrix.png` | Matriz de confusión (test) |
-| `results/figures/aciertos_*.png` | 5 aciertos |
-| `results/figures/errores_*.png` | 5 errores |
+| `results/figures/confusion_matrix.png` | Matriz de confusión (**validación**, literal c) |
+| `results/figures/aciertos_*.png` | 5 aciertos en **test** (literal d) |
+| `results/figures/errores_*.png` | 5 errores en **test** (literal d) |
 | `results/reports/error_analysis.md` | Análisis de confusiones |
 
-**Métrica principal:** accuracy en **test** (> 0.88 esperado). `val_referencia` en 05 es optimista tras entrenar con train+val.
+**Métrica principal (literal c):** exactitud en **validación** (~97.8 %). **Test** (~92.6 %) se usa para ejemplos cualitativos (literal d) e interfaz web (literal f).
 
 ## Modelos
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Evalúa el modelo final: test (hold-out) y val (referencia; incluido en entrenamiento final)."""
+"""Evalúa el modelo final: val (literal c) y test (referencia para literal d)."""
 
 import argparse
 import json
@@ -31,14 +31,15 @@ def main():
     ckpt_path = Path(args.checkpoint) if args.checkpoint else (MODELS_DIR / "final_model.pt")
     data = load_processed()
 
+    # Literal c: métricas principales en validación (hold-out por sujeto)
     loaders = {
-        "test": DataLoader(
-            HARDataset(data["X_test"], data["y_test"]),
+        "val": DataLoader(
+            HARDataset(data["X_val"], data["y_val"]),
             batch_size=args.batch_size,
             shuffle=False,
         ),
-        "val_referencia": DataLoader(
-            HARDataset(data["X_val"], data["y_val"]),
+        "test": DataLoader(
+            HARDataset(data["X_test"], data["y_test"]),
             batch_size=args.batch_size,
             shuffle=False,
         ),
@@ -46,6 +47,16 @@ def main():
 
     model = load_model_from_checkpoint(ckpt_path, device)
     results = evaluate_model(model, loaders, device)
+
+    metrics_path = METRICS_DIR / "metrics_final.json"
+    with open(metrics_path, encoding="utf-8") as f:
+        saved = json.load(f)
+    saved["_nota"] = (
+        "Literal c: métricas principales y matriz de confusión en val. "
+        "Literal d: ejemplos cualitativos en test (script 06)."
+    )
+    with open(metrics_path, "w", encoding="utf-8") as f:
+        json.dump(saved, f, indent=2)
 
     history_path = METRICS_DIR / "training_history.json"
     if history_path.exists():
@@ -56,25 +67,16 @@ def main():
     else:
         print("Sin training_history.json; ejecute 04_final_training.py para loss_curves.png")
 
-    metrics_path = METRICS_DIR / "metrics_final.json"
-    with open(metrics_path, encoding="utf-8") as f:
-        saved = json.load(f)
-    saved["_nota_val"] = (
-        "val_referencia: sujetos usados en entrenamiento final (train+val). "
-        "Métrica principal: test."
-    )
-    with open(metrics_path, "w", encoding="utf-8") as f:
-        json.dump(saved, f, indent=2)
-
-    for split, metrics in results.items():
+    for split in ("val", "test"):
+        metrics = results[split]
         print(f"\n=== {split.upper()} ===")
         print(f"Accuracy: {metrics['accuracy']:.4f}")
         print(f"F1 macro: {metrics['f1_macro']:.4f}")
         print(metrics["classification_report"])
 
-    cm = np.array(results["test"]["confusion_matrix"])
+    cm = np.array(results["val"]["confusion_matrix"])
     plot_confusion_matrix(cm, FIGURES_DIR / "confusion_matrix.png")
-    print(f"\nMatriz de confusión (test): {FIGURES_DIR / 'confusion_matrix.png'}")
+    print(f"\nMatriz de confusión (val, literal c): {FIGURES_DIR / 'confusion_matrix.png'}")
 
 
 if __name__ == "__main__":

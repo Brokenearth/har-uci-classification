@@ -4,11 +4,11 @@ Artefactos principales del proyecto para revisión o demostración **sin volver 
 
 | Archivo | Descripción |
 |---------|-------------|
-| `metrics_final.json` | Accuracy, precision, recall, F1 y matriz de confusión (test) |
+| `metrics_final.json` | Métricas en **val** (literal c) y **test** (referencia / literal d) |
 | `comparacion_modelos.csv` | Validación cruzada 2-fold: LSTM vs Conv1D+LSTM |
-| `confusion_matrix.png` | Matriz de confusión en conjunto de **test** |
-| `loss_curves.png` | Curvas de pérdida y accuracy del entrenamiento final |
-| `final_model.pt` | Pesos del modelo Conv1D+LSTM entrenado |
+| `confusion_matrix.png` | Matriz de confusión en conjunto de **validación** (literal c) |
+| `loss_curves.png` | Curvas de entrenamiento final (solo train; val para early stopping) |
+| `final_model.pt` | Pesos del modelo Conv1D+LSTM entrenado solo con train |
 
 ## Ejecutar la app Flask sin entrenar
 

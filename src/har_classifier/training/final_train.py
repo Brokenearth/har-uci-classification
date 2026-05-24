@@ -1,9 +1,8 @@
-"""Entrenamiento final del mejor modelo sobre train + val (todos los sujetos de entrenamiento UCI)."""
+"""Entrenamiento final del mejor modelo sobre train; val para early stopping (literal c)."""
 
 import json
 from pathlib import Path
 
-import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
@@ -39,11 +38,11 @@ def run_final_training(
     batch_size: int = BATCH_SIZE,
     lr: float = LEARNING_RATE,
     use_wandb: bool = True,
-    monitor_ratio: float = 0.1,
 ) -> Path:
     """
-    Entrena con train+val oficial (sin fuga al test UCI).
-    Un 10%% aleatorio solo sirve para early-stopping interno, no para métricas finales.
+    Entrena solo con X_train / y_train (Proyecto 13, literal c).
+    X_val se usa durante el entrenamiento para early stopping; las métricas
+    oficiales del modelo final se reportan en val con el script 05.
     """
     set_seed(RANDOM_SEED)
     device = get_device()
@@ -51,19 +50,10 @@ def run_final_training(
         model_name = get_best_model_name()
 
     data = load_processed()
-    X_full = np.concatenate([data["X_train"], data["X_val"]], axis=0)
-    y_full = np.concatenate([data["y_train"], data["y_val"]], axis=0)
-
-    n = len(y_full)
-    rng = np.random.default_rng(RANDOM_SEED)
-    perm = rng.permutation(n)
-    n_monitor = max(1, int(monitor_ratio * n))
-    monitor_idx, train_idx = perm[:n_monitor], perm[n_monitor:]
-
-    train_ds = HARDataset(X_full[train_idx], y_full[train_idx])
-    monitor_ds = HARDataset(X_full[monitor_idx], y_full[monitor_idx])
+    train_ds = HARDataset(data["X_train"], data["y_train"])
+    val_ds = HARDataset(data["X_val"], data["y_val"])
     train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
-    monitor_loader = DataLoader(monitor_ds, batch_size=batch_size, shuffle=False)
+    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
 
     model = build_model(model_name)
     trainer = Trainer(
@@ -80,7 +70,7 @@ def run_final_training(
     history = trainer.fit(
         model,
         train_loader,
-        monitor_loader,
+        val_loader,
         epochs=epochs,
         lr=lr,
         model_name=model_name,
@@ -111,10 +101,10 @@ def run_final_training(
     stats = {
         "model_name": model_name,
         "epochs": epochs,
-        "best_monitor_accuracy": max(history["val_accuracy"]) if history["val_accuracy"] else None,
-        "n_train_samples": int(len(train_idx)),
-        "n_monitor_samples": int(len(monitor_idx)),
-        "note": "Entrenado con train+val UCI; evaluar métricas finales solo en test (script 05).",
+        "best_val_accuracy": max(history["val_accuracy"]) if history["val_accuracy"] else None,
+        "n_train_samples": int(len(data["X_train"])),
+        "n_val_samples": int(len(data["X_val"])),
+        "note": "Entrenado solo con train; evaluar métricas finales en val (script 05, literal c).",
     }
     with open(METRICS_DIR / "final_stats.json", "w", encoding="utf-8") as f:
         json.dump(stats, f, indent=2)
