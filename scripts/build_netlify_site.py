@@ -63,13 +63,25 @@ def main() -> None:
     assets = SITE / "assets"
     assets.mkdir(exist_ok=True)
 
+    metrics_path = EVIDENCIAS / "metrics_final.json"
+    if not metrics_path.exists():
+        metrics_path = ROOT / "results" / "metrics" / "metrics_final.json"
+    with open(metrics_path, encoding="utf-8") as f:
+        metrics_file = json.load(f)
+    val_acc = float(metrics_file["val"]["accuracy"])
+    test_acc = float(metrics_file["test"]["accuracy"])
+
     meta = {
         "activity_names": ACTIVITY_NAMES,
         "channels": INERTIAL_CHANNELS,
         "n_samples": n,
         "metrics": {
-            "test_accuracy": 0.9338,
-            "note": "Inferencia precomputada; mismo modelo que evidencias/final_model.pt",
+            "val_accuracy": val_acc,
+            "test_accuracy": test_acc,
+            "note": (
+                "Explorador: predicciones precomputadas en test. "
+                "Figuras: matriz y curvas según evidencias/ (val, literal c)."
+            ),
         },
     }
     with open(SITE / "data" / "meta.json", "w", encoding="utf-8") as f:
