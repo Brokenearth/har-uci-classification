@@ -8,7 +8,7 @@ from flask import Flask, render_template_string, request
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from har_classifier.config import ACTIVITY_NAMES, MODELS_DIR
+from har_classifier.config import ACTIVITY_NAMES, DATA_PROCESSED, MODELS_DIR
 from har_classifier.evaluation.metrics import load_model_from_checkpoint
 from har_classifier.evaluation.visualization import plot_signals_base64
 from har_classifier.preprocessing import load_processed
@@ -346,15 +346,33 @@ _model = None
 _data = None
 _device = None
 
+_CKPT = MODELS_DIR / "final_model.pt"
+_NPZ = DATA_PROCESSED / "har_processed.npz"
+
+
+def _preflight() -> None:
+    """Comprueba artefactos antes de abrir el servidor."""
+    missing = []
+    if not _NPZ.exists():
+        missing.append(
+            f"  - {_NPZ}\n"
+            "    Ejecute: .venv\\Scripts\\python.exe scripts\\02_preprocess.py"
+        )
+    if not _CKPT.exists():
+        missing.append(
+            f"  - {_CKPT}\n"
+            "    Ejecute: .venv\\Scripts\\python.exe scripts\\04_final_training.py"
+        )
+    if missing:
+        print("Faltan archivos para la interfaz:\n" + "\n".join(missing), file=sys.stderr)
+        raise SystemExit(1)
+
 
 def _load():
     global _model, _data, _device
     if _model is None:
         _device = get_device(verbose=False)
-        ckpt = MODELS_DIR / "final_model.pt"
-        if not ckpt.exists():
-            raise FileNotFoundError(f"Falta {ckpt}. Ejecute scripts/04_final_training.py")
-        _model = load_model_from_checkpoint(ckpt, _device)
+        _model = load_model_from_checkpoint(_CKPT, _device)
         _data = load_processed()
 
 
@@ -400,6 +418,10 @@ def index():
 
 
 if __name__ == "__main__":
+    _preflight()
+    print("Cargando modelo y datos de test (una sola vez)...")
+    _load()
+    print(f"Listo: {len(_data['y_test'])} muestras de test.")
     print("Abre http://127.0.0.1:5000")
     print("Detener con Ctrl+C")
     app.run(host="127.0.0.1", port=5000, debug=False, use_reloader=False)
