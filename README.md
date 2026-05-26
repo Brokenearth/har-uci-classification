@@ -1,127 +1,149 @@
-# Clasificación de Actividades Humanas (UCI HAR)
+# HAR con smartphone — UCI HAR
 
-Sistema reproducible en Python para clasificar seis actividades humanas a partir de nueve señales inerciales del [UCI HAR Dataset](https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones). Compara **LSTM** vs **Conv1D+LSTM** con validación cruzada por sujeto, registro en Weights & Biases e interfaz web para inferencia.
+¿Qué hace una persona con el móvil en la cintura: camina, sube escaleras o solo está sentada?  
+Este proyecto responde eso con **redes recurrentes en PyTorch**, usando el [dataset UCI HAR](https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones): **6 actividades**, **9 señales inerciales** por ventana de 2,56 s.
 
-## Estructura
+Comparamos **LSTM** frente a **Conv1D+LSTM**, elegimos la mejor arquitectura con validación cruzada **por sujeto** (sin mezclar personas entre train y val) y dejamos una **app web** para explorar predicciones en el conjunto de test.
 
-```
-ProyectoF13CI/
-├── data/                     # raw/ + processed/ (.npz, stats.json)
-├── src/har_classifier/       # Paquete con toda la lógica
-│   ├── loader.py             # Lectura UCI (archivos .txt)
-│   ├── torch_dataset.py      # HARDataset (PyTorch)
-│   ├── models/, training/, evaluation/, utils/
-├── scripts/                  # Pipeline 01–06 (orquestación)
-├── app/                      # flask_app.py, streamlit_app.py
-├── site/                     # Demo estática para Netlify
-├── netlify.toml              # publish = site
-├── results/                  # Salidas del pipeline
-└── evidencias/               # Copia para entrega
-```
+| | |
+|---|---|
+| **Validación (métrica principal)** | ~**97,8 %** exactitud |
+| **Test (referencia / demo)** | ~**92,6 %** |
+| **Ganador en CV** | Conv1D+LSTM (92,45 % vs 90,61 % LSTM) |
 
-Los `scripts/0X_*.py` llaman módulos en `src/har_classifier/` (p. ej. `training/final_train.py`). No es código duplicado: scripts = entrada; paquete = librería. La carpeta `outputs/` es legado; usar solo `results/`.
+Repositorio: [Brokenearth/har-uci-classification](https://github.com/Brokenearth/har-uci-classification)
 
-## Requisitos
+---
 
-- Python 3.10+
-- (Opcional) GPU NVIDIA con PyTorch CUDA
+## En 30 segundos
 
 ```powershell
 py -3 -m venv .venv
 .venv\Scripts\pip.exe install -r requirements.txt
-```
 
-Si PowerShell bloquea `activate`, usa `.venv\Scripts\python.exe` directamente.
-
-## Pipeline completo
-
-```powershell
 .venv\Scripts\python.exe scripts/01_download_data.py
 .venv\Scripts\python.exe scripts/02_preprocess.py
 .venv\Scripts\python.exe scripts/03_cross_validation.py --epochs 30 --no-wandb
 .venv\Scripts\python.exe scripts/04_final_training.py --epochs 40 --no-wandb
 .venv\Scripts\python.exe scripts/05_evaluate.py
 .venv\Scripts\python.exe scripts/06_visualize_errors.py
-.venv\Scripts\python.exe scripts/test_models.py
 ```
 
-### Weights & Biases (opcional)
-
-1. Copie `.env.example` → `.env` y pegue su API key en `WANDB_API_KEY` (no suba `.env` a Git).
-2. Ejecute entrenamiento con registro en W&B:
-
-```powershell
-.\scripts\run_training_wandb.ps1
-```
-
-Runs en el proyecto [har-uci-classification](https://wandb.ai) (carpeta local `wandb/` si usa `WANDB_MODE=offline`). Para desactivar W&B sin cambiar scripts: añada `--no-wandb` a los pasos 03 y 04.
-
-## Interfaz web
-
-**Flask (recomendado en Windows)** — señales 9 canales, etiquetas y probabilidades:
+Luego abre la interfaz:
 
 ```powershell
 .venv\Scripts\python.exe app/flask_app.py
 ```
 
-O `scripts\run_flask.bat` → http://127.0.0.1:5000
+→ [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
-**Streamlit** — http://localhost:8501
+> Si PowerShell no deja usar `activate`, invoca siempre `.venv\Scripts\python.exe`.
+
+---
+
+## Qué hay dentro del repo
+
+```
+ProyectoF13CI/
+├── data/                 # Datos crudos y har_processed.npz
+├── src/har_classifier/   # Lógica: modelos, entrenamiento, métricas
+├── scripts/              # Pipeline 01 → 06 (punto de entrada)
+├── app/                  # Flask y Streamlit
+├── site/ + netlify.toml  # Demo estática (sin servidor Python)
+├── results/              # Salidas al correr el pipeline
+└── evidencias/           # Copia lista para entregar / demostrar
+```
+
+Los scripts `01`–`06` **orquestan**; el paquete `har_classifier` **implementa**. No es código duplicado.  
+La carpeta `outputs/` es legado — ignórala y usa `results/`.
+
+---
+
+## Modelos
+
+**LSTM** — memoria temporal directa sobre la ventana `(128 × 9)`.
+
+**Conv1D+LSTM** — convoluciones locales (32 → 64) + LSTM 2×128; es el modelo final del proyecto.
+
+Ambos entrenan con `StratifiedGroupKFold` agrupando por **sujeto**, para que nadie aparezca a la vez en train y val de un mismo fold.
+
+---
+
+## Weights & Biases (opcional)
+
+Si quieres ver pérdida y accuracy por época en la nube:
+
+1. Copia `.env.example` → `.env` y pon tu `WANDB_API_KEY` (`.env` no va a Git).
+2. Ejecuta:
+
+```powershell
+.\scripts\run_training_wandb.ps1
+```
+
+Proyecto en W&B: **har-uci-classification**.  
+¿Prefieres ir sin W&B? Deja `--no-wandb` en los pasos 03 y 04, como en el pipeline de arriba.
+
+---
+
+## Interfaz web
+
+**Flask (recomendado en Windows)** — muestra las 9 señales, etiqueta real, predicción y probabilidades sobre **test**:
+
+```powershell
+.venv\Scripts\python.exe app/flask_app.py
+# o: scripts\run_flask.bat
+```
+
+**Streamlit** — misma idea, otro front:
 
 ```powershell
 .venv\Scripts\python.exe scripts/run_streamlit.py
 ```
 
-## Demo en Netlify (estático)
+Necesitas `data/processed/har_processed.npz` y `results/models/final_model.pt`. Si solo tienes el modelo en `evidencias/`, mira `evidencias/LEEME.md`.
 
-Netlify no ejecuta Flask ni PyTorch. La carpeta `site/` es una demo con **predicciones precomputadas** del conjunto de test (misma UI: probabilidades + 9 canales + figuras de evidencias).
+---
 
-Regenerar tras cambiar el modelo o los datos:
+## Demo en Netlify
+
+Netlify no corre PyTorch. La carpeta `site/` sirve una **demo estática**: mismas probabilidades y gráficas, pero predicciones **ya calculadas** sobre test.
+
+Regenerar tras cambiar modelo o datos:
 
 ```powershell
 .venv\Scripts\python.exe scripts/build_netlify_site.py
 ```
 
-**Desplegar** (repositorio `Brokenearth/har-uci-classification`):
+Despliegue rápido: conecta el repo en [Netlify](https://app.netlify.com/) (lee `netlify.toml`, `publish = site`) o arrastra `site/` en [Netlify Drop](https://app.netlify.com/drop).
 
-1. Sube a GitHub el repo con `site/data/samples.json.gz`, `netlify.toml` y el resto de `site/`.
-2. En [Netlify](https://app.netlify.com/) → **Add new site** → **Import an existing project** → elige el repo de GitHub.
-3. Netlify detecta `netlify.toml` (`publish = "site"`). Pulsa **Deploy site**.
-4. La URL será algo como `https://<nombre>.netlify.app`.
+---
 
-Alternativa sin Git: arrastra la carpeta `site/` en **Netlify Drop** (https://app.netlify.com/drop).
+## Resultados y entrega
 
-## Carpeta de evidencias (`evidencias/`)
+Tras el pipeline, lo importante queda en `results/`:
 
-Copia lista para entregar o revisar sin reentrenar: `metrics_final.json`, `comparacion_modelos.csv`, `confusion_matrix.png`, `loss_curves.png`, `final_model.pt`. Ver `evidencias/LEEME.md` para ejecutar la app con ese modelo.
+- `metrics/metrics_final.json` — métricas en **val** y referencia en test  
+- `figures/confusion_matrix.png` — matriz en **validación**  
+- `figures/aciertos_*.png` / `errores_*.png` — ejemplos en **test**  
+- `models/final_model.pt` — pesos del Conv1D+LSTM (entrenado solo con train interno)
 
-Actualizar tras un nuevo pipeline:
+La carpeta **`evidencias/`** es el paquete para revisión sin reentrenar (`sync_evidencias.py` la actualiza).
 
-```powershell
-.venv\Scripts\python.exe scripts\sync_evidencias.py
-```
+| Conjunto | Muestras | Uso |
+|----------|----------|-----|
+| Train interno | 5551 | Entrenar modelo final |
+| Validación | 1801 | Métricas oficiales y matriz |
+| Test UCI | 2947 | App web, ejemplos cualitativos, Netlify |
 
-## Evidencias del plan (`results/`)
+---
 
-| Artefacto | Descripción |
-|-----------|-------------|
-| `data/processed/har_processed.npz` | Train / val / test normalizados |
-| `results/metrics/comparacion_modelos.csv` | CV 2-fold LSTM vs Conv1D+LSTM |
-| `results/models/best_model.pt` | Mejor fold CV (`ensure_best_model.py` o tras 03) |
-| `results/models/final_model.pt` | Modelo final (entrenado solo con train) |
-| `results/metrics/metrics_final.json` | Métricas **val** (literal c) + test (literal d) |
-| `results/metrics/training_history.json` | Historial entrenamiento final |
-| `results/figures/loss_curves.png` | Curvas pérdida / accuracy |
-| `results/figures/confusion_matrix.png` | Matriz de confusión (**validación**, literal c) |
-| `results/figures/aciertos_*.png` | 5 aciertos en **test** (literal d) |
-| `results/figures/errores_*.png` | 5 errores en **test** (literal d) |
-| `results/reports/error_analysis.md` | Análisis de confusiones |
+## Requisitos
 
-**Métrica principal (literal c):** exactitud en **validación** (~97.8 %). **Test** (~92.6 %) se usa para ejemplos cualitativos (literal d) e interfaz web (literal f).
+- Python **3.10+**
+- GPU NVIDIA opcional (PyTorch con CUDA acelera el entrenamiento)
 
-## Modelos
+---
 
-- **LSTMClassifier**: `(B, T, C)`, LSTM 2×128, dropout 0.3.
-- **Conv1DLSTMClassifier**: Conv1d→BN→ReLU→MaxPool (32→64), LSTM, clasificación.
+## Créditos de datos
 
-Validación: `StratifiedGroupKFold` por sujeto sin fuga entre train y val.
+Anguita et al., *Human Activity Recognition Using Smartphones*, UCI ML Repository (ID 240), 2013.
