@@ -7,7 +7,11 @@ __pycache__/
 data/raw/
 data/processed/*.npz
 wandb/
+.env
 .DS_Store
+# Presentación local (no versionar)
+evidencias/presentacion_har_beamer.tex
+
 # Salidas regenerables del pipeline (copia de entrega en evidencias/)
 results/models/*.pt
 results/figures/*.png

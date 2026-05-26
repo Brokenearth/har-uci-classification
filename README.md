@@ -36,8 +36,6 @@ Si PowerShell bloquea `activate`, usa `.venv\Scripts\python.exe` directamente.
 ## Pipeline completo
 
 ```powershell
-$env:WANDB_MODE = "offline"   # o: wandb login
-
 .venv\Scripts\python.exe scripts/01_download_data.py
 .venv\Scripts\python.exe scripts/02_preprocess.py
 .venv\Scripts\python.exe scripts/03_cross_validation.py --epochs 30 --no-wandb
@@ -46,6 +44,17 @@ $env:WANDB_MODE = "offline"   # o: wandb login
 .venv\Scripts\python.exe scripts/06_visualize_errors.py
 .venv\Scripts\python.exe scripts/test_models.py
 ```
+
+### Weights & Biases (opcional)
+
+1. Copie `.env.example` → `.env` y pegue su API key en `WANDB_API_KEY` (no suba `.env` a Git).
+2. Ejecute entrenamiento con registro en W&B:
+
+```powershell
+.\scripts\run_training_wandb.ps1
+```
+
+Runs en el proyecto [har-uci-classification](https://wandb.ai) (carpeta local `wandb/` si usa `WANDB_MODE=offline`). Para desactivar W&B sin cambiar scripts: añada `--no-wandb` a los pasos 03 y 04.
 
 ## Interfaz web
 

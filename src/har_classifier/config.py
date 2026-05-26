@@ -1,5 +1,6 @@
 """Configuración global del proyecto."""
 
+import os
 from pathlib import Path
 
 # Rutas base
@@ -62,5 +63,6 @@ N_CV_FOLDS = 2
 VAL_SUBJECT_RATIO = 0.2
 EARLY_STOPPING_PATIENCE = 5
 
-# W&B
+# W&B (clave en .env o variable WANDB_API_KEY; ver .env.example)
 WANDB_PROJECT = "har-uci-classification"
+WANDB_ENTITY = os.environ.get("WANDB_ENTITY") or None

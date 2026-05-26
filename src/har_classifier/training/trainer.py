@@ -9,7 +9,12 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from har_classifier.config import EARLY_STOPPING_PATIENCE, LEARNING_RATE
+from har_classifier.config import (
+    EARLY_STOPPING_PATIENCE,
+    LEARNING_RATE,
+    WANDB_ENTITY,
+    WANDB_PROJECT,
+)
 
 
 class Trainer:
@@ -33,7 +38,36 @@ class Trainer:
         config["model"] = model_name
         if fold is not None:
             config["fold"] = fold
-        self._run = wandb.init(project=self.wandb_config.get("project"), config=config)
+
+        project = self.wandb_config.get("project") or WANDB_PROJECT
+        phase = config.get("phase", "train")
+        if fold is not None:
+            run_name = f"{model_name}-fold{fold}"
+            group = f"cv-{model_name}"
+            job_type = "cross-validation"
+        elif phase == "final_train":
+            run_name = f"{model_name}-final"
+            group = "final-train"
+            job_type = "final"
+        else:
+            run_name = model_name
+            group = None
+            job_type = None
+
+        init_kwargs: dict[str, Any] = {
+            "project": project,
+            "config": config,
+            "name": run_name,
+            "tags": [model_name, phase],
+        }
+        if WANDB_ENTITY:
+            init_kwargs["entity"] = WANDB_ENTITY
+        if group:
+            init_kwargs["group"] = group
+        if job_type:
+            init_kwargs["job_type"] = job_type
+
+        self._run = wandb.init(**init_kwargs)
 
     def fit(
         self,

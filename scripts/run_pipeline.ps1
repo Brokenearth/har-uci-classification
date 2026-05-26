@@ -1,7 +1,7 @@
 # Pipeline completo UCI HAR (ejecutar desde la raíz del proyecto)
 $ErrorActionPreference = "Stop"
 $env:WANDB_MODE = "offline"
-$py = Join-Path $PSScriptRoot ".." ".venv" "Scripts" "python.exe"
+$py = Join-Path (Join-Path (Split-Path $PSScriptRoot -Parent) ".venv") "Scripts\python.exe"
 if (-not (Test-Path $py)) { $py = "python" }
 
 & $py (Join-Path $PSScriptRoot "01_download_data.py")
